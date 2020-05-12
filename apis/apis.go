@@ -27,13 +27,13 @@ func SetRedis(logger *log.Logger, client *redis.Client) func(w http.ResponseWrit
 		var user User
 		err := json.NewDecoder(r.Body).Decode(&user)
 		if err != nil {
-			logger.Printf("Error: %v", err)
+			logger.Printf("Error SET decode: %v", err)
 			w.WriteHeader(http.StatusBadRequest)
 		}
 
 		json, err := json.Marshal(User{Name: user.Name, Age: user.Age})
 		if err != nil {
-			logger.Printf("Error: %v", err)
+			logger.Printf("Error SET marshal: %v", err)
 			w.WriteHeader(http.StatusBadRequest)
 		}
 
@@ -41,7 +41,7 @@ func SetRedis(logger *log.Logger, client *redis.Client) func(w http.ResponseWrit
 		err = client.Set(kids, json, 0).Err()
 		if err != nil {
 			logger.Printf("Error SET: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 		} else {
 			logger.Printf("New entry added with id (key): %s", kids)
 			kid++
@@ -58,7 +58,7 @@ func GetRedis(logger *log.Logger, client *redis.Client) func(w http.ResponseWrit
 		val, err := client.Get(kids).Result()
 		if err != nil {
 			logger.Printf("Error GET: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 		}
 		w.Write([]byte(val))
 	}

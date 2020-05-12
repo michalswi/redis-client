@@ -6,9 +6,14 @@
 $ docker run --rm -d --name redis -p 6379:6379 redis
 
 
-# CLIENT
+# RUN
 
 $ make go-run
+
+OR
+
+$ REDIS_HOST=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
+$ REDIS_HOST=$REDIS_HOST make docker-run
 
 
 # POST

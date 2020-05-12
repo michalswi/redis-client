@@ -22,13 +22,13 @@ func main() {
 	fmt.Println("Go Redis Client")
 	logger := log.New(os.Stdout, "redisClient ", log.LstdFlags|log.Lshortfile)
 
-	Rhost := "localhost"
-	Rport := "6379"
+	RedisHost := os.Getenv("REDIS_HOST")
+	RedisPort := os.Getenv("REDIS_PORT")
 	ServiceAddr := os.Getenv("SERVICE_ADDR")
 	APIPath := "/red"
 
 	// redis client
-	client := rclient.NewClient(Rhost, Rport)
+	client := rclient.NewClient(RedisHost, RedisPort)
 
 	r := mux.NewRouter()
 	prefix := r.PathPrefix(APIPath).Subrouter()

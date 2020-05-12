@@ -11,6 +11,8 @@ LAST_COMMIT_USER ?= $(shell git log -1 --format='%cn <%ce>')
 LAST_COMMIT_HASH ?= $(shell git log -1 --format=%H)
 LAST_COMMIT_TIME ?= $(shell git log -1 --format=%cd --date=format:'%Y-%m-%d %H:%M:%S')
 
+REDIS_HOST ?= localhost
+REDIS_PORT ?= 6379
 SERVICE_ADDR ?= 8080
 DNS_NAME ?= localhost
 
@@ -26,6 +28,8 @@ test:
 
 go-run: 		## Run redis client - no binary
 	$(info -run - no binary-)
+	REDIS_HOST=$(REDIS_HOST) \
+	REDIS_PORT=$(REDIS_PORT) \
 	SERVICE_ADDR=$(SERVICE_ADDR) \
 	DNS_NAME=$(DNS_NAME) \
 	go run .	
@@ -65,6 +69,8 @@ docker-run:		## Once docker image is ready run with default parameters
 	$(info -run docker-)
 	docker run -d --rm \
 	--name $(APPNAME) \
+	-e REDIS_HOST=$(REDIS_HOST) \
+	-e REDIS_PORT=$(REDIS_PORT) \
 	-p $(SERVICE_ADDR):$(SERVICE_ADDR) \
 	$(DOCKER_REPO)/$(APPNAME):latest
 

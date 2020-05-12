@@ -33,8 +33,8 @@ FROM alpine:${ALPINE_VERSION}
 ARG VERSION
 ARG APPNAME
 
-ENV SERVICE_ADDR="8080"
-ENV DNS_NAME="localhost"
+ENV SERVICE_ADDR "8080"
+ENV DNS_NAME "localhost"
 
 COPY --from=builder /tmp/dummy/${APPNAME}-${VERSION} /usr/bin/${APPNAME}
 
