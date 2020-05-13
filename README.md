@@ -1,6 +1,6 @@
 ## simple redis client
 
-Simple redis client written in Go. You can interact (set, get) either with local redis running in docker or the Azure Cache for Redis.
+Simple redis client written in Go. You can interact (set, get) either with local redis running in docker or the Azure Cache for Redis (deployed using terraform).
 
 #### # image
 
@@ -80,9 +80,13 @@ $ curl -XGET localhost:8080/red/getuser/2 | jq
 
 #### # azure
 
-[Here](https://docs.microsoft.com/en-us/azure/azure-cache-for-redis/cache-python-get-started) you have some example how to create a Python app that uses Azure Cache for Redis.
+[Here](https://docs.microsoft.com/en-us/azure/azure-cache-for-redis/cache-python-get-started) you have some example how to create a Python app that uses Azure Cache for Redis.  
+
+**Don't forget to log in to Azure!**
 
 ```
+$ az login
+
 ### deploy 'redis'
 
 ACI - Azure Container Instances
@@ -95,7 +99,7 @@ $ make azure-rg
 
 $ DNS_NAME_LABEL=redis-$RANDOM \
   LOCATION=westeurope \
-  RGNAME=redisRG
+  RGNAME=redisrg
 
 $ az container create \
   --resource-group $RGNAME \
@@ -118,8 +122,16 @@ $ curl -XGET localhost:8080/red/ping
 
 ## TERRAFORM - WITH access keys (password)
 
-# > redis
-in progress..
+# > redis [inprogress]
+
+$ export TF_VAR_client_id=<> && export TF_VAR_client_secret=<>
+$ cd redis/
+
+$ terraform init
+$ terraform plan -out out.plan
+$ terraform apply out.plan
+
+$ terraform destroy -auto-approve
 
 
 # > test using redis-client (run locally)
@@ -134,6 +146,8 @@ $ curl -i -XGET localhost:8080/red/ping
 
 
 # > test using redis-client using ACI
+
+$ make azure-rg
 
 $ SERVICE_ADDR=80 \
 REDIS_HOST=redisms.redis.cache.windows.net \
