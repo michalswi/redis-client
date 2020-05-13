@@ -24,11 +24,13 @@ func main() {
 
 	RedisHost := os.Getenv("REDIS_HOST")
 	RedisPort := os.Getenv("REDIS_PORT")
+	RedisPass := os.Getenv("REDIS_PASS")
+	RedisTls := os.Getenv("REDIS_TLS")
 	ServiceAddr := os.Getenv("SERVICE_ADDR")
 	APIPath := "/red"
 
 	// redis client
-	client := rclient.NewClient(RedisHost, RedisPort)
+	client := rclient.NewClient(RedisHost, RedisPort, RedisPass, RedisTls)
 
 	r := mux.NewRouter()
 	prefix := r.PathPrefix(APIPath).Subrouter()
@@ -49,11 +51,11 @@ func main() {
 	}()
 
 	// shutdown server
-	gracefulShutdown(srv, logger)
+	gracefulShutdown(logger, srv)
 }
 
 // graceful shutdown
-func gracefulShutdown(srv *http.Server, logger *log.Logger) {
+func gracefulShutdown(logger *log.Logger, srv *http.Server) {
 	interruptChan := make(chan os.Signal, 1)
 	signal.Notify(interruptChan, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	<-interruptChan
