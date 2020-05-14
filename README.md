@@ -122,21 +122,26 @@ $ curl -XGET localhost:8080/red/ping
 
 ## TERRAFORM - WITH access keys (password)
 
-# > redis [inprogress]
+# > redis [it takes some time to deploy, even around 30 minutes..]
 
 $ export TF_VAR_client_id=<> && export TF_VAR_client_secret=<>
 $ cd redis/
 
 $ terraform init
 $ terraform plan -out out.plan
+
 $ terraform apply out.plan
+(...)
+hostname = mredis.redis.cache.windows.net
+primary_access_key = yIvSS+rPz3zWhG3685lj6Fw9Si51stlZgx4lYieWF0s=
+ssl_port = 6380
 
 $ terraform destroy -auto-approve
 
 
 # > test using redis-client (run locally)
 
-$ REDIS_HOST=redisms.redis.cache.windows.net \
+$ REDIS_HOST=mredis.redis.cache.windows.net \
 REDIS_PORT=6380 \
 REDIS_PASS=yIvSS+rPz3zWhG3685lj6Fw9Si51stlZgx4lYieWF0s= \
 REDIS_TLS=true \
@@ -145,12 +150,12 @@ make go-run
 $ curl -i -XGET localhost:8080/red/ping
 
 
-# > test using redis-client using ACI
+# > test using redis-client (run using ACI)
 
 $ make azure-rg
 
 $ SERVICE_ADDR=80 \
-REDIS_HOST=redisms.redis.cache.windows.net \
+REDIS_HOST=mredis.redis.cache.windows.net \
 REDIS_PORT=6380 \
 REDIS_PASS=yIvSS+rPz3zWhG3685lj6Fw9Si51stlZgx4lYieWF0s= \
 REDIS_TLS=true \
