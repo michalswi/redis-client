@@ -24,7 +24,7 @@ AZ_LOCATION ?= westeurope
 AZ_DNS_LABEL ?= $(APPNAME)-$(VERSION)
 
 .DEFAULT_GOAL := help
-.PHONY: test go-run go-build all docker-build docker-run docker-stop azure-rg azure-rg-del azure-aci azure-aci-logs azure-aci-delete
+.PHONY: test go-run go-build all docker-build docker-run docker-stop azure-rg azure-rg-del azure-aci azure-aci-logs azure-vnet-create azure-redis-vnet azure-aci-delete
 
 help:
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n\nTargets:\n"} /^[a-zA-Z_-]+:.*?##/ \
@@ -117,7 +117,26 @@ azure-aci-logs:	## Get redis-client app logs (Azure Container Instance)
 	--resource-group $(AZ_RG) \
 	--name $(APPNAME)
 
+azure-vnet-create:	## Create the private VNet
+	az network vnet create \
+	--name "$(APPNAME)-vnet" \
+	--resource-group $(AZ_RG) \
+	--address-prefixes "172.20.0.0/23" \
+	--subnet-name "$(APPNAME)-subnet" \
+	--subnet-prefixes "172.20.0.0/24"
+
+azure-redis-vnet:	## Run redis (Azure Container Instance)
+	az container create \
+	--resource-group $(AZ_RG) \
+	--name redis \
+	--image redis \
+	--restart-policy Always \
+	--ports 6379 \
+	--location $(AZ_LOCATION) \
+	--vnet "$(APPNAME)-vnet" \
+	--subnet "$(APPNAME)-subnet"
+
 azure-aci-delete:	## Delete redis-client app (Azure Container Instance)
 	az container delete \
 	--resource-group $(AZ_RG) \
-	--name $(APPNAME)	
+	--name $(APPNAME)

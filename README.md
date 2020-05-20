@@ -2,34 +2,19 @@
 
 Simple redis client written in Go. You can interact (set, get) either with local redis running in docker or the Azure Cache for Redis (deployed using terraform).
 
-#### # image
+### # image
 
 `michalsw/redis-client:latest`
 
 While connecting to Redis by default there is no password set in **redis-client**. If you want to pass access key (password) use env **REDIS_PASS**. If TLS is required like in Azure use env **REDIS_TLS**.  
 
-Use **make** to make you better.
+Use **make** to get all details and run specific command.
 
 ```
-$ make
-
-Usage:
-  make <target>
-
-Targets:
-  go-run           Run redis client - no binary
-  go-build         Build binary
-  docker-build     Build docker image
-  docker-run       Once docker image is ready run with default parameters (or overwrite)
-  docker-stop      Stop running docker
-  azure-rg         Create the Azure Resource Group
-  azure-rg-del     Delete the Azure Resource Group
-  azure-aci        Run redis-client app (Azure Container Instance)
-  azure-aci-logs   Get redis-client app logs (Azure Container Instance)
-  azure-aci-delete  Delete redis-client app (Azure Container Instance)
+$ make help
 ```
 
-#### # endpoints
+### # endpoints
 ```
 GET   /red/ping
 POST  /red/setuser
@@ -37,7 +22,7 @@ GET   /red/getuser/{id}
 GET   /red/home
 ```
 
-#### # local
+### # local
 ```
 # deploy 'redis'
 
@@ -65,20 +50,20 @@ $ curl -i -X POST -d '{"name":"mo","age":20}' localhost:8080/red/setuser
 $ curl -XGET localhost:8080/red/ping
 PONG
 
-$ curl -XGET localhost:8080/red/getuser/1 | jq
+$ curl -XGET -s localhost:8080/red/getuser/1 | jq
 {
   "name": "mi",
   "age": 10
 }
 
-$ curl -XGET localhost:8080/red/getuser/2 | jq
+$ curl -XGET -s localhost:8080/red/getuser/2 | jq
 {
   "name": "mo",
   "age": 20
 }
 ```
 
-#### # azure
+### # azure
 
 [Here](https://docs.microsoft.com/en-us/azure/azure-cache-for-redis/cache-python-get-started) you have some example how to create a Python app that uses Azure Cache for Redis.  
 
@@ -168,4 +153,92 @@ $ curl redis-client-d58df48.westeurope.azurecontainer.io/red/ping
 $ make azure-aci-logs 
 
 $ make azure-aci-delete
+```
+
+### # use case
+
+User is connecting to Redis-client to connect to Redis-cache.  
+**redis-client** is a frontend-service (deployed using App Service).  
+**redis** is a backend-service (deployed using ACI in private VNet).  
+
+```
+$ az login
+$ make azure-rg
+```
+
+**Deploy redis-client webapp**  
+![webapp](./img/webapp.png)
+
+**Create the private VNet**
+```
+$ make azure-vnet-create
+```
+
+**Deploy redis using ACI in the private VNet**
+```
+$ make azure-redis-vnet
+```
+
+**Configure VNet integration**  
+More details you can find [here](https://docs.microsoft.com/en-us/azure/app-service/web-sites-integrate-with-vnet).  
+
+Select `Add VNet`:
+![vnetconf1](./img/vnetconf1.png)
+
+Specify `Subnet Address Block`:  
+![vnetconf2](./img/vnetconf2.png)
+
+![vnetconf3](./img/vnetconf3.png)
+
+**Configure redis-client (ENV vars)**
+```
+$ REDISIP=$(az container show --resource-group redisrg --name redis --query ipAddress.ip --output tsv)
+
+$ az webapp config appsettings set --resource-group redisrg --name redis-client --settings \
+  SERVICE_ADDR=80 \
+  REDIS_HOST=$REDISIP \
+  REDIS_PORT=6379 \
+  REDIS_PASS="" \
+  REDIS_TLS=""
+```
+
+**Enable logs**
+```
+$ az webapp log config --name redis-client --resource-group redisrg --docker-container-logging filesystem
+```
+
+**Watch logs**
+```
+$ az webapp log tail --name redis-client --resource-group redisrg
+...
+```
+
+#### Test connection
+```
+$ curl -XGET https://redis-client.azurewebsites.net/red/home
+
+$ curl -XGET https://redis-client.azurewebsites.net/red/ping
+PONG
+
+If PONG then there is connection with redis!!
+
+$ curl -i -X POST -d '{"name":"mi","age":10}' https://redis-client.azurewebsites.net/red/setuser
+$ curl -i -X POST -d '{"name":"mo","age":20}' https://redis-client.azurewebsites.net/red/setuser
+
+$ curl -XGET -s https://redis-client.azurewebsites.net/red/getuser/1 | jq
+{
+  "name": "mi",
+  "age": 10
+}
+
+$ curl -XGET -s https://redis-client.azurewebsites.net/red/getuser/2 | jq
+{
+  "name": "mo",
+  "age": 20
+}
+
+
+# clean ALL
+
+$ make azure-rg-del 
 ```
