@@ -1,5 +1,5 @@
-GOLANG_VERSION := 1.13.4
-ALPINE_VERSION := 3.10
+GOLANG_VERSION := 1.15.6
+ALPINE_VERSION := 3.13
 
 GIT_REPO := github.com/michalswi/redis-client
 DOCKER_REPO := michalsw
@@ -34,7 +34,7 @@ test:
 	go test -v ./...
 
 go-run: 		## Run redis client - no binary
-	$(info -run - no binary-)
+	$(info -run redis-client (no binary)-)
 	REDIS_HOST=$(REDIS_HOST) \
 	REDIS_PORT=$(REDIS_PORT) \
 	REDIS_PASS=$(REDIS_PASS) \
@@ -44,7 +44,7 @@ go-run: 		## Run redis client - no binary
 	go run .	
 
 go-build: 		## Build binary
-	$(info -build binary-)
+	$(info -build redis-client binary-)
 	CGO_ENABLED=0 \
 	go build \
 	-v \
@@ -58,7 +58,7 @@ go-build: 		## Build binary
 all: test go-build
 
 docker-build:	## Build docker image
-	$(info -build docker image-)
+	$(info -build redis-client docker image-)
 	docker build \
 	--pull \
 	--build-arg GOLANG_VERSION="$(GOLANG_VERSION)" \
@@ -74,8 +74,9 @@ docker-build:	## Build docker image
 	--tag="$(DOCKER_REPO)/$(APPNAME):$(VERSION)" \
 	.
 
-docker-run:		## Once docker image is ready run with default parameters (or overwrite)
-	$(info -run docker-)
+docker-run:		## Run docker image with default parameters (or overwrite)
+	$(info -run redis-client in docker-)
+
 	docker run -d --rm \
 	--name $(APPNAME) \
 	-e REDIS_HOST=$(REDIS_HOST) \
@@ -86,7 +87,7 @@ docker-run:		## Once docker image is ready run with default parameters (or overw
 	$(DOCKER_REPO)/$(APPNAME):latest
 
 docker-stop:	## Stop running docker
-	$(info -stop docker-)
+	$(info -stop redis-client in docker-)
 	docker stop $(APPNAME)
 
 azure-rg:	## Create the Azure Resource Group

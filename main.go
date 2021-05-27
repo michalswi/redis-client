@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/michalswi/keycloak_client/server"
 	"github.com/michalswi/redis-client/apis"
 	"github.com/michalswi/redis-client/rclient"
+	"github.com/michalswi/redis-client/server"
 )
 
-var version = "0.1.0"
+var version = "0.2.0"
 
 func main() {
 	fmt.Println("Go Redis Client")

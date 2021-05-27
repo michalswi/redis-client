@@ -101,7 +101,7 @@ func GetRedis(logger *log.Logger, client *redis.Client) func(w http.ResponseWrit
 func PingRedis(logger *log.Logger, client *redis.Client) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
-		logger.Printf("Processing request in %s\n", time.Now().Sub(startTime))
+		logger.Printf("Processing redis PING request in %s\n", time.Now().Sub(startTime))
 		pong, err := client.Ping().Result()
 		if err != nil {
 			logger.Printf("Error: %v", err)

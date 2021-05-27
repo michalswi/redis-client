@@ -26,37 +26,41 @@ GET   /red/home
 ```
 # deploy 'redis'
 
-$ docker run --rm -d --name redis -p 6379:6379 redis
+docker run --rm -d --name redis -p 6379:6379 redis
 
 
 # run 'redis-client'
 
-$ make go-run
 
-OR
+> go
 
-$ REDIS_HOST=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
-$ REDIS_HOST=$REDIS_HOST make docker-run
+make go-run
+
+
+> docker
+
+REDIS_HOST=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' redis)
+REDIS_HOST=$REDIS_HOST make docker-run
 
 
 # POST
 
-$ curl -i -X POST -d '{"name":"mi","age":10}' localhost:8080/red/setuser
-$ curl -i -X POST -d '{"name":"mo","age":20}' localhost:8080/red/setuser
+curl -i -X POST -d '{"name":"mi","age":10}' localhost:8080/red/setuser
+curl -i -X POST -d '{"name":"mo","age":20}' localhost:8080/red/setuser
 
 
 # GET
 
-$ curl -XGET localhost:8080/red/ping
+curl -XGET localhost:8080/red/ping
 PONG
 
-$ curl -XGET -s localhost:8080/red/getuser/1 | jq
+curl -XGET -s localhost:8080/red/getuser/1 | jq
 {
   "name": "mi",
   "age": 10
 }
 
-$ curl -XGET -s localhost:8080/red/getuser/2 | jq
+curl -XGET -s localhost:8080/red/getuser/2 | jq
 {
   "name": "mo",
   "age": 20
@@ -70,89 +74,94 @@ $ curl -XGET -s localhost:8080/red/getuser/2 | jq
 **Don't forget to log in to Azure!**
 
 ```
-$ az login
+## login
 
-### deploy 'redis'
-
-ACI - Azure Container Instances
-
-## ACI - NO access keys (password)
-
-# > redis
-
-$ make azure-rg
-
-$ DNS_NAME_LABEL=redis-$RANDOM \
-  LOCATION=westeurope \
-  RGNAME=redisrg
-
-$ az container create \
-  --resource-group $RGNAME \
-  --name redis \
-  --image redis \
-  --restart-policy Always \
-  --ports 6379 \
-  --dns-name-label $DNS_NAME_LABEL \
-  --location $LOCATION \
-  --environment-variables \
-    DNS_NAME=$DNS_NAME_LABEL.$LOCATION.azurecontainer.io
+az login
 
 
-# > test using 'redis-client' (run locally)
+## deploy
 
-$ REDIS_HOST=redis-28318.westeurope.azurecontainer.io make go-run
-
-$ curl -XGET localhost:8080/red/ping
+*ACI - Azure Container Instances
 
 
-## TERRAFORM - WITH access keys (password)
+# ACI - NO access keys (password)
 
-# > redis [it takes some time to deploy, even around 30 minutes..]
+> redis server
 
-$ export TF_VAR_client_id=<> && export TF_VAR_client_secret=<>
-$ cd redis/
+make azure-rg
 
-$ terraform init
-$ terraform plan -out out.plan
+DNS_NAME_LABEL=redis-$RANDOM \
+LOCATION=westeurope \
+RGNAME=redisrg
 
-$ terraform apply out.plan
+az container create \
+--resource-group $RGNAME \
+--name redis \
+--image redis \
+--restart-policy Always \
+--ports 6379 \
+--dns-name-label $DNS_NAME_LABEL \
+--location $LOCATION \
+--environment-variables \
+  DNS_NAME=$DNS_NAME_LABEL.$LOCATION.azurecontainer.io
+
+
+> test using 'redis-client' (run locally)
+
+REDIS_HOST=redis-28318.westeurope.azurecontainer.io make go-run
+curl -XGET localhost:8080/red/ping
+
+make azure-rg-del
+
+
+# TERRAFORM - WITH access keys (password)
+
+> redis server [it takes some time to deploy]
+
+cd redis/
+
+az login
+
+terraform init
+terraform plan -out out.plan
+terraform apply out.plan
 (...)
 hostname = mredis.redis.cache.windows.net
 primary_access_key = yIvSS+rPz3zWhG3685lj6Fw9Si51stlZgx4lYieWF0s=
 ssl_port = 6380
 
-$ terraform destroy -auto-approve
+terraform destroy -auto-approve
 
 
-# > test using redis-client (run locally)
+> test using redis-client (run locally)
 
-$ REDIS_HOST=mredis.redis.cache.windows.net \
+REDIS_HOST=mredis.redis.cache.windows.net \
 REDIS_PORT=6380 \
 REDIS_PASS=yIvSS+rPz3zWhG3685lj6Fw9Si51stlZgx4lYieWF0s= \
 REDIS_TLS=true \
 make go-run
 
-$ curl -i -XGET localhost:8080/red/ping
+curl -i -XGET localhost:8080/red/ping
 
 
-# > test using redis-client (run using ACI)
+> test using redis-client (run using ACI)
 
-$ make azure-rg
+make azure-rg
 
-$ SERVICE_ADDR=80 \
+SERVICE_ADDR=80 \
 REDIS_HOST=mredis.redis.cache.windows.net \
 REDIS_PORT=6380 \
 REDIS_PASS=yIvSS+rPz3zWhG3685lj6Fw9Si51stlZgx4lYieWF0s= \
 REDIS_TLS=true \
 make azure-aci
 
-$ curl redis-client-d58df48.westeurope.azurecontainer.io/red/home
+curl redis-client-d58df48.westeurope.azurecontainer.io/red/home
 
-$ curl redis-client-d58df48.westeurope.azurecontainer.io/red/ping
+curl redis-client-d58df48.westeurope.azurecontainer.io/red/ping
 
-$ make azure-aci-logs 
+make azure-aci-logs
 
-$ make azure-aci-delete
+make azure-aci-delete
 ```
 
 ### # use case
