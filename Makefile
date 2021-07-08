@@ -6,6 +6,8 @@ DOCKER_REPO := michalsw
 APPNAME := redis-client
 
 VERSION ?= $(shell git describe --tags --always)
+# if '.git/' doesn't exist
+# VERSION ?= $(shell git describe --tags --always 2>/dev/null || echo testdev)
 BUILD_TIME ?= $(shell date -u '+%Y-%m-%d %H:%M:%S')
 LAST_COMMIT_USER ?= $(shell git log -1 --format='%cn <%ce>')
 LAST_COMMIT_HASH ?= $(shell git log -1 --format=%H)
@@ -21,7 +23,8 @@ DNS_NAME ?= localhost
 
 AZ_RG ?= redisrg
 AZ_LOCATION ?= westeurope
-AZ_DNS_LABEL ?= $(APPNAME)-$(VERSION)
+AZ_RANDOM ?=$(shell head /dev/urandom | tr -dc a-z0-9 | head -c 7)
+AZ_DNS_LABEL ?= $(APPNAME)-$(AZ_RANDOM)
 
 .DEFAULT_GOAL := help
 .PHONY: test go-run go-build all docker-build docker-run docker-stop azure-rg azure-rg-del azure-aci azure-aci-logs azure-vnet-create azure-redis-vnet azure-aci-delete
